@@ -15,8 +15,17 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.conf.urls.static import static
+
+from core.settings import MEDIA_URL, MEDIA_ROOT
+from chat.views import index_page
 
 urlpatterns = [
+    path('', index_page, name='index-page'),
     path('chat/', include('chat.urls')),
     path('admin/', admin.site.urls),
 ]
+
+urlpatterns += staticfiles_urlpatterns()
+urlpatterns += static(MEDIA_URL, document_root=MEDIA_ROOT)

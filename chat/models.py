@@ -1,5 +1,14 @@
+import os
+
+from email.policy import default
 from django.db import models
 from django.contrib.auth.models import User
+
+from core.settings import MEDIA_ROOT
+
+class Avatar(models.Model):
+  user = models.OneToOneField(User, on_delete=models.CASCADE)
+  photo = models.ImageField(blank=False, default=os.path.join(MEDIA_ROOT, 'avas', 'default.jpeg'), upload_to='avas')
 
 class Room(models.Model):
   name = models.CharField(max_length=128)

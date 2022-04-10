@@ -76,16 +76,20 @@ function connect() {
         break;
       case "user_list":
         for (let i = 0; i < data.users.length; i += 1) {
-          onlineUsersSelectorAdd(data.users[i]);
+          onlineUsersSelectorAdd(
+            data.users[i].username + ":   " + data.users[i].photo
+          );
         }
         break;
       case "user_join":
-        chatLog.value += data.user + " joined the room.\n";
-        onlineUsersSelectorAdd(data.user);
+        chatLog.value += data.user.username + " joined the room.\n";
+        onlineUsersSelectorAdd(data.user.username + ":   " + data.user.photo);
         break;
       case "user_leave":
-        chatLog.value += data.user + " leave the room.\n";
-        onlineUsersSelectorRemove(data.user);
+        chatLog.value += data.user.username + " leave the room.\n";
+        onlineUsersSelectorRemove(
+          data.users[i].username + ":   " + data.users[i].photo
+        );
         break;
       case "private_message":
         chatLog.value += "PM from " + data.user + ": " + data.message + "\n";
@@ -111,7 +115,8 @@ function connect() {
 connect();
 
 onlineUsersSelector.onchange = function () {
-  chatMessageInput.value = "/pm " + onlineUsersSelector.value + " ";
+  chatMessageInput.value =
+    "/pm " + onlineUsersSelector.value.split(":")[0] + " ";
   onlineUsersSelector.value = null;
   chatMessageInput.focus();
 };

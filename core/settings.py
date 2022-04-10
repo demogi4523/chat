@@ -140,4 +140,16 @@ ASGI_THREADS = min(32, os.cpu_count() + 4)
 DJANGO_ALLOW_ASYNC_UNSAFE = True
 # os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+TEMPLATE_DIRS  = (
+    BASE_DIR / 'chat' /'templates/',
+)
+
+STATICFILES_DIRS = (
+  BASE_DIR / 'chat' / 'static/',
+)
+
+STATIC_URL = '/static/'
+
+MEDIA_URL = '/media/'
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

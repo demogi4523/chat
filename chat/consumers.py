@@ -3,7 +3,7 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 
-from .models import Room, Message
+from .models import Avatar, Room, Message
 
 class ChatConsumer(AsyncWebsocketConsumer):
   def __init__(self, *args, **kwargs):
@@ -45,14 +45,20 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # print(online_users)
         await self.send(json.dumps({
           'type': 'user_list',
-          'users': [user.username for user in online_users],
+          'users': [{
+              'username': user.username,
+              'photo': await database_sync_to_async(get_photo_url)(user),
+            } for user in online_users],
         }))
 
         await self.channel_layer.group_send(
           self.room_group_name,
           {
             'type': 'user_join',
-            'user': self.user.username,
+            'user': {
+              'username': self.user.username,
+              'photo': await database_sync_to_async(get_photo_url)(self.user),
+            }
           },
         )
 
@@ -69,8 +75,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.room_group_name,
         {
           'type': 'user_leave',
-          'user': self.user.username,
-        },
+          'user': { 
+            'username': self.user.username,
+            'photo': await database_sync_to_async(get_photo_url)(self.user),
+          },
+        }
       )
 
 
@@ -139,3 +148,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
   async def private_message_delivered(self, event):
     await self.send(text_data=json.dumps(event))
+
+def get_photo_url(user):
+  return Avatar.objects.get(user=user).photo.url
