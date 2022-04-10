@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -133,3 +134,8 @@ CHANNEL_LAYERS = {
         },
     }
 }
+
+ASGI_THREADS = min(32, os.cpu_count() + 4)
+
+DJANGO_ALLOW_ASYNC_UNSAFE = True
+# os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
