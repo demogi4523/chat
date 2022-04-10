@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-9ave691lne59a)k8l@j*6@o)_g^wmy-0ns_74vou&$cvbu$t98
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -139,3 +139,5 @@ ASGI_THREADS = min(32, os.cpu_count() + 4)
 
 DJANGO_ALLOW_ASYNC_UNSAFE = True
 # os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
