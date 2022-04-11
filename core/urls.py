@@ -19,11 +19,15 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.conf.urls.static import static
 
 from core.settings import MEDIA_URL, MEDIA_ROOT
-from chat.views import index_page
+from chat.views import login_view, signup_view, login_required_view, account_settings
 
 urlpatterns = [
-    path('', index_page, name='index-page'),
+    path('', login_view, name='index-page'),
+    path('login-required', login_required_view, name='login-required'),
+    # path('reg', SignUpView.as_view(), name='reg-page'),
+    path('reg', signup_view, name='reg-page'),
     path('chat/', include('chat.urls')),
+    path('account-settings', account_settings, name='account-settings'),
     path('admin/', admin.site.urls),
 ]
 

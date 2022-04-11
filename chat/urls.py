@@ -8,6 +8,5 @@ app_name = 'chat'
 urlpatterns = [
   path('', index_view, name='chat-index'),
   path('<str:room_name>/', room_view, name='chat-room'),
-  # path('logout', LogoutView.as_view(), {'next_page': reverse_lazy('chat:chat-index')}, name='logout')
   path('logout', logout, name='logout')
 ]

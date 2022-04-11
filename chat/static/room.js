@@ -88,7 +88,7 @@ function connect() {
       case "user_leave":
         chatLog.value += data.user.username + " leave the room.\n";
         onlineUsersSelectorRemove(
-          data.users[i].username + ":   " + data.users[i].photo
+          data.user.username + ":   " + data.user.photo
         );
         break;
       case "private_message":
@@ -120,3 +120,8 @@ onlineUsersSelector.onchange = function () {
   onlineUsersSelector.value = null;
   chatMessageInput.focus();
 };
+
+window.addEventListener("unload", function () {
+    if(chatSocket.readyState == WebSocket.OPEN)
+        chatSocket.close();
+});

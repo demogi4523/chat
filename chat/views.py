@@ -1,13 +1,16 @@
 from django.http import HttpResponse
 from django.urls import reverse_lazy
 from django.shortcuts import render, redirect
-from django.contrib.auth.views import LoginView
 from django.contrib.auth import login, authenticate, logout as lgt
+from django.views.generic import CreateView
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_http_methods
 
 from .models import Avatar, Room
-from .forms import LoginForm
+from .forms import LoginForm, RegisterForm, AccountPhotoUpdateForm
 
-def index_page(req):
+@require_http_methods(['GET', 'POST'])
+def login_view(req):
   if req.method == 'GET':
     user = req.user
     if user.is_authenticated:
@@ -18,6 +21,7 @@ def index_page(req):
     })
   
   if req.method == 'POST':
+    next_page = req.GET.get('next', 'chat:chat-index')
     form = LoginForm(req.POST)
     if form.is_valid():
       cd = form.cleaned_data
@@ -25,20 +29,22 @@ def index_page(req):
       if user is None:
         return HttpResponse("Wrong password or username")
       login(req, user)
-      return redirect('chat:chat-index')
-  
-  return HttpResponse("Wrong", status=405)
+      return redirect(next_page)
 
+@require_http_methods(['GET'])
+@login_required(login_url='login-required')
 def index_view(req):
-  return render(req, 'index.html', {
-    'rooms': Room.objects.all(),
-  })
+    next_page = req.GET.get('next', 'chat:chat-index')
+    return render(req, 'index.html', {
+        'rooms': Room.objects.all(),
+    })
 
+
+@require_http_methods(['GET'])
+@login_required(login_url='login-required')
 def room_view(req, room_name):
   chat_room, created = Room.objects.get_or_create(name=room_name)
-  # print(req.user)
   path = Avatar.objects.get(user=req.user).photo
-  # print(path)
   return render(req, 'room.html', {
     'room': chat_room,
     'path': path,
@@ -46,6 +52,48 @@ def room_view(req, room_name):
     'username': req.user.username,
   })
 
+
+@login_required
 def logout(req):
   lgt(req)
   return redirect('index-page')
+
+@require_http_methods(['GET', 'POST'])
+def signup_view(req):
+    form = RegisterForm(req.POST)
+    if form.is_valid():
+        form.save()
+        username = form.cleaned_data.get('username')
+        password = form.cleaned_data.get('password1')
+        user = authenticate(username=username, password=password)
+        login(req, user)
+        next_page = req.GET.get('next', 'chat:chat-index')
+        return redirect(next_page)
+    else:
+        form = RegisterForm()
+    return render(req, 'reg.html', {'form': form})
+
+@require_http_methods(['GET'])
+def login_required_view(req):
+    next_page = req.GET.get('next', None)
+    return render(req, "login_required.html", { 'next_page': next_page })
+
+@require_http_methods(['GET', 'POST'])
+def account_settings(req):
+    # TODO: Crop avatar
+    if req.method == 'GET':
+        form = AccountPhotoUpdateForm()
+        return render(req, 'account_settings.html', {
+            'form': form,
+            'prev_photo': Avatar.objects.get(user=req.user).photo.url,
+        })
+    if req.method == 'POST':
+        form = AccountPhotoUpdateForm(req.POST, req.FILES)
+        if form.is_valid():
+            photo = form.cleaned_data['photo']
+            print(photo)
+            avatar = Avatar.objects.get(user=req.user)
+            avatar.photo=photo
+            avatar.save()
+            return HttpResponse('OK')
+        return HttpResponse('Wrong!', 405)

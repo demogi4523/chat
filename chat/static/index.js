@@ -5,6 +5,7 @@ document.querySelector("#roomInput").focus();
 
 // submit if the user presses the enter key
 document.querySelector("#roomInput").onkeyup = function(e) {
+    // TODO: add validation
     if (e.keyCode === 13) {  // enter key
         document.querySelector("#roomConnect").click();
     }
@@ -13,11 +14,13 @@ document.querySelector("#roomInput").onkeyup = function(e) {
 // redirect to '/room/<roomInput>/'
 document.querySelector("#roomConnect").onclick = function() {
     let roomName = document.querySelector("#roomInput").value;
+    // TODO: add validation
     window.location.pathname = "chat/" + roomName + "/";
 }
 
 // redirect to '/room/<roomSelect>/'
 document.querySelector("#roomSelect").onchange = function() {
     let roomName = document.querySelector("#roomSelect").value.split(" (")[0];
+    // TODO: add validation
     window.location.pathname = "chat/" + roomName + "/";
 }

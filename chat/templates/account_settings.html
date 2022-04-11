@@ -1,0 +1,11 @@
+{% load static %}
+
+<h1>You settings</h1>
+
+<form method="post"  enctype="multipart/form-data" id="form_img">
+  {{ form.as_p }} {% csrf_token %}
+  <img id="img_id" src="{{ prev_photo }}" alt="your image" />
+  <p><input type="submit" value="Save" /></p>
+</form>
+
+<script src="{% static 'account_settings.js' %}"></script>

@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Login required!
+{% endblock title %}
+
+{% block content %}
+    <div>Wait, wait, wait <a href={% url 'index-page' %}?next={{next_page}}>login</a> or <a href={% url 'reg-page' %}?next={{next_page}}>register</a> at first</div>
+{% endblock content %}
