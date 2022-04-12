@@ -2,6 +2,9 @@ console.log("Sanity check from room.js.");
 
 const roomName = JSON.parse(document.getElementById("roomName").textContent);
 
+let photo;
+const q = document.querySelector('#q');
+const q2 = document.querySelector('#q2');
 let chatLog = document.querySelector("#chatLog");
 let chatMessageInput = document.querySelector("#chatMessageInput");
 let chatMessageSend = document.querySelector("#chatMessageSend");
@@ -36,13 +39,27 @@ chatMessageInput.onkeyup = function (e) {
 // clear the 'chatMessageInput' and forward the message
 chatMessageSend.onclick = function () {
   if (chatMessageInput.value.length === 0) return;
-  // TODO: forward the message to the WebSocket
-  chatSocket.send(
-    JSON.stringify({
-      message: chatMessageInput.value,
-    })
-  );
-  chatMessageInput.value = "";
+  if (photo) {
+    const fr = new FileReader();
+    fr.onloadend = () => {
+      const msg = {
+        message: chatMessageInput.value,
+        photo: fr.result,
+      };
+      chatMessageInput.value = "";
+      console.log(msg);
+      chatSocket.send(JSON.stringify(msg));
+    };
+    fr.readAsDataURL(photo);
+  } else {
+    chatSocket.send(
+      JSON.stringify({
+        message: chatMessageInput.value,
+      })
+    );
+    chatMessageInput.value = "";
+  }
+
 };
 
 let chatSocket = null;
@@ -74,6 +91,10 @@ function connect() {
       case "chat_message":
         chatLog.value += data.user + ": " + data.message + "\n";
         break;
+      case "chat_message_with_attachment":
+        chatLog.value += data.user + ": " + data.message + "\n" + "WITH ATTACHMENT" + "\n";
+        q.src = data.photo;
+        break
       case "user_list":
         for (let i = 0; i < data.users.length; i += 1) {
           onlineUsersSelectorAdd(
@@ -125,3 +146,20 @@ window.addEventListener("unload", function () {
     if(chatSocket.readyState == WebSocket.OPEN)
         chatSocket.close();
 });
+
+function upload_img(input) {
+  if (input.files && input.files[0]) {
+    photo = input.files[0];
+    const src = URL.createObjectURL(input.files[0])
+    q2.src = src;
+    q2.style.display = 'block';
+  }
+}
+
+window.onload = function() {
+  const file = document.querySelector('input[type=file]');
+  file.addEventListener('change', (e) => {
+      e.stopPropagation();
+      upload_img(e.target)
+  });
+}

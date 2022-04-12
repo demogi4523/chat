@@ -1,4 +1,3 @@
-<!-- prettier-ignore -->
 {% load static %}
 <!DOCTYPE html>
 <html>
@@ -14,7 +13,9 @@
   </head>
   <body>
     <div id="header">
-      <span class="logo">Profile</span>
+      {% comment %} TODO: Сделать navbar {% endcomment %}
+      <span class="logo">Logo</span>
+      {% comment %} TODO: вынести настройки аккаунта в аккаунт {% endcomment %}
       <a href="{% url 'account-settings' %}"><span class="alert alert-info">Settings</span></a>
     </div>
     <div id="content">{% block content %} {% endblock %}</div>

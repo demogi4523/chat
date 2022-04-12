@@ -1,4 +1,3 @@
-<!-- prettier-ignore -->
 {% extends 'base.html' %}
 
 {% load static %}
@@ -23,6 +22,7 @@
 <div class="container mt-3 p-5">
   <h2>django-channels-chat</h2>
 
+  {% comment %} TODO: вынести аккаунт в navbar {% endcomment %}
   <figure>
     <img src="http://{{ req.get_host }}/media/{{ path }}" />
     <figcaption>{{ username }}</figcaption>
@@ -33,6 +33,10 @@
     <div class="col-12 col-md-8">
       <div class="mb-2">
         <label for="chatLog">Room: #{{ room.name }}</label>
+        {% comment %} TODO: Заменить textarea на div {% endcomment %}
+        <div>
+          <img src="#" alt="" id="q">
+        </div>
         <textarea
           class="form-control"
           id="chatLog"
@@ -41,12 +45,18 @@
         ></textarea>
       </div>
       <div class="input-group">
+        <div>
+          <img src="#" alt="" id="q2">
+        <div>
         <input
           type="text"
           class="form-control"
           id="chatMessageInput"
           placeholder="Enter your chat message"
         />
+        <div class="input-group-append">
+          <input type="file">
+        </div>
         <div class="input-group-append">
           <button class="btn btn-success" id="chatMessageSend" type="button">
             Send

@@ -11,7 +11,6 @@ class LoginForm(forms.Form):
 class RegisterForm(UserCreationForm):
     username = forms.CharField(required=True)
 
-
     class Meta:
         model = User
         fields = ("username", "password1", "password2")
@@ -27,4 +26,3 @@ class RegisterForm(UserCreationForm):
 
 class AccountPhotoUpdateForm(forms.Form):
     photo = forms.ImageField(required=True)
-    

@@ -1,9 +1,12 @@
 import json
+from uuid import uuid4
 
+from django.core.files.base import ContentFile
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 
-from .models import Avatar, Room, Message
+from .models import Attachment, Avatar, Room, Message
+from .utils import file_from_string_to_file
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -48,7 +51,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'users': [{
                     'username': user.username,
                     'photo': await database_sync_to_async(get_photo_url)(user),
-                    } for user in online_users],
+                        } for user in online_users],
             }))
 
             await self.channel_layer.group_send(
@@ -82,8 +85,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
     async def websocket_receive(self, event):
+        # print(type(event["text"]))
         text_data_json = json.loads(event['text'])
         message = text_data_json['message']
+        photo = text_data_json.get('photo', None)
 
         if not self.user.is_authenticated:
             return
@@ -113,6 +118,28 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
             return
 
+        if photo:
+            # send message with attachment
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'chat_message_with_attachment',
+                    'user': self.user.username,
+                    'message': message,
+                    'photo': photo,
+                }
+            )
+
+            msg = await database_sync_to_async(self.create_message)(message)
+            filename = f"{str(uuid4())}"
+            [file, ext] = file_from_string_to_file(photo, filename, 'image')
+            filename_with_ext = f"{filename}.{ext}"
+
+            photo_file = ContentFile(file)
+            await database_sync_to_async(self.create_attachment)(msg, filename_with_ext, photo_file)
+
+            return
+
         # send chat message event to the room
         await self.channel_layer.group_send(
             self.room_group_name,
@@ -131,10 +158,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
     def get_online(self, room_name):
         return list(Room.objects.get(name=room_name).online.all())
 
-    def create_message(self, message):
-        Message.objects.create(user=self.user, room=self.room, content=message)
+    def create_message(self, msg):
+        message = Message.objects.create(user=self.user, room=self.room, content=msg)
+        return message
+
+    def create_attachment(self, message, filename, photo):
+        Attachment.objects.create(message=message, photo=photo, name=filename)
 
     async def chat_message(self, event):
+        await self.send(text_data=json.dumps(event))
+
+    async def chat_message_with_attachment(self, event):
         await self.send(text_data=json.dumps(event))
 
     async def user_leave(self, event):

@@ -1,6 +1,6 @@
 function upload_img(input) {
   if (input.files && input.files[0]) {
-    var src = URL.createObjectURL(input.files[0])
+    const src = URL.createObjectURL(input.files[0])
     const img = document.querySelector('#img_id');
     img.src = src;
     img.style.display = 'block';
