@@ -18,6 +18,14 @@ class Avatar(models.Model):
     def __str__(self):
         return f"{self.user.username} avatar"
 
+    def url(self):
+        return os.path.join(MEDIA_URL, str(self.photo))
+
+    def get_photo(self):
+        # used in the admin site model as a "thumbnail"
+        html = '<img src="{}" width="150" height="150" />'
+        return mark_safe(html.format(self.url()))
+
 
 class Room(models.Model):
     name = models.CharField(max_length=128)
