@@ -55,7 +55,7 @@ class Message(models.Model):
 
 
 class Attachment(models.Model):
-    message = models.ForeignKey(to=Message, on_delete=models.CASCADE)
+    message = models.ForeignKey(to=Message, on_delete=models.CASCADE, related_name='attachment')
     photo = models.ImageField(upload_to='attachments', blank=False)
     name = models.CharField(max_length=128, unique=True, default='qq')
 

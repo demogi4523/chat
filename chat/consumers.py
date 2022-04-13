@@ -124,7 +124,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 self.room_group_name,
                 {
                     'type': 'chat_message_with_attachment',
-                    'user': self.user.username,
+                    'user': {
+                        'username': self.user.username,
+                        'avatar': await database_sync_to_async(get_photo_url)(self.user),
+                    },
                     'message': message,
                     'photo': photo,
                 }
@@ -145,7 +148,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.room_group_name,
             {
                 'type': 'chat_message',
-                'user': self.user.username,
+                'user': {
+                    'username': self.user.username,
+                    'avatar': await database_sync_to_async(get_photo_url)(self.user),
+                },
                 'message': message,
             }
         )

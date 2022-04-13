@@ -11,7 +11,6 @@ function hide_broken_image() {
 
 hide_broken_image()
 
-
 const roomName = JSON.parse(document.getElementById("roomName").textContent);
 
 let photo;
@@ -21,6 +20,37 @@ let chatLog = document.querySelector("#chatLog");
 let chatMessageInput = document.querySelector("#chatMessageInput");
 let chatMessageSend = document.querySelector("#chatMessageSend");
 let onlineUsersSelector = document.querySelector("#onlineUsersSelector");
+
+function addMessage(author, msg, photo, attachment) {
+  const newMessage = document.createElement('div');
+  const user = document.createElement('div');
+  const avatar = document.createElement('img');
+  avatar.src = photo;
+  avatar.style.width = '40px';
+  avatar.style.height = '40px';
+  const username = document.createElement('div');
+  username.textContent = author;
+  const message = document.createElement('div');
+  message.textContent = msg;
+
+  user.appendChild(avatar);
+  user.appendChild(username);
+
+  const hr = document.createElement('hr');
+  newMessage.appendChild(user);
+
+  if (attachment) {
+    const att = document.createElement('img');
+    att.src = attachment;
+    att.style.width = "160px";
+    att.style.height = "80px";
+    message.appendChild(att);
+  }
+
+  newMessage.appendChild(message);
+  newMessage.appendChild(hr);
+  chatLog.appendChild(newMessage);
+}
 
 // adds a new option to 'onlineUsersSelector'
 function onlineUsersSelectorAdd(value) {
@@ -61,6 +91,8 @@ chatMessageSend.onclick = function () {
       chatMessageInput.value = "";
       console.log(msg);
       chatSocket.send(JSON.stringify(msg));
+      q2.src = '#';
+      q2.style.display = 'none';  
     };
     fr.readAsDataURL(photo);
   } else {
@@ -101,12 +133,14 @@ function connect() {
 
     switch (data.type) {
       case "chat_message":
-        chatLog.value += data.user + ": " + data.message + "\n";
+        // chatLog.value += data.user + ": " + data.message + "\n";
+        addMessage(data.user.username, data.message, data.user.avatar);
         break;
       case "chat_message_with_attachment":
-        chatLog.value += data.user + ": " + data.message + "\n" + "WITH ATTACHMENT" + "\n";
-        q.src = data.photo;
-        q.style.display = "block";
+        addMessage(data.user.username, data.message, data.user.avatar, data.photo);
+        // chatLog.value += data.user + ": " + data.message + "\n" + "WITH ATTACHMENT" + "\n";
+        // q.src = data.photo;
+        // q.style.display = "block";
         break
       case "user_list":
         for (let i = 0; i < data.users.length; i += 1) {
@@ -116,7 +150,8 @@ function connect() {
         }
         break;
       case "user_join":
-        chatLog.value += data.user.username + " joined the room.\n";
+        // TODO: Update this code
+        // chatLog.value += data.user.username + " joined the room.\n";
         onlineUsersSelectorAdd(data.user.username + ":   " + data.user.photo);
         break;
       case "user_leave":
