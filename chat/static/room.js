@@ -1,5 +1,17 @@
 console.log("Sanity check from room.js.");
 
+function hide_broken_image() {
+  const imgs = document.querySelectorAll('img');
+  imgs.forEach((img) => {
+    img.onerror = function() {
+      this.style.display = 'none';
+    }
+  });
+}
+
+hide_broken_image()
+
+
 const roomName = JSON.parse(document.getElementById("roomName").textContent);
 
 let photo;
@@ -94,6 +106,7 @@ function connect() {
       case "chat_message_with_attachment":
         chatLog.value += data.user + ": " + data.message + "\n" + "WITH ATTACHMENT" + "\n";
         q.src = data.photo;
+        q.style.display = "block";
         break
       case "user_list":
         for (let i = 0; i < data.users.length; i += 1) {

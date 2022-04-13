@@ -13,6 +13,10 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -140,12 +144,12 @@ ASGI_THREADS = min(32, os.cpu_count() + 4)
 DJANGO_ALLOW_ASYNC_UNSAFE = True
 # os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
-TEMPLATE_DIRS  = (
-    BASE_DIR / 'chat' /'templates/',
+TEMPLATE_DIRS = (
+    os.path.join(BASE_DIR, 'chat', 'templates/'),
 )
 
 STATICFILES_DIRS = (
-  BASE_DIR / 'chat' / 'static/',
+    os.path.join(BASE_DIR, 'chat', 'static/'),
 )
 
 STATIC_URL = '/static/'

@@ -3,8 +3,10 @@ import os
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.safestring import mark_safe
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 
-from core.settings import MEDIA_URL
+from core.settings import MEDIA_URL, MEDIA_ROOT
 
 default_image = os.path.join('avas', 'default.jpeg')
 
@@ -14,9 +16,10 @@ class Avatar(models.Model):
     photo = models.ImageField(blank=False,
                               default=default_image,
                               upload_to='avas')
-    
+
     def __str__(self):
         return f"{self.user.username} avatar"
+
 
 class Room(models.Model):
     name = models.CharField(max_length=128)
@@ -61,8 +64,21 @@ class Attachment(models.Model):
 
     def photo_tag(self):
         # used in the admin site model as a "thumbnail"
-        return mark_safe('<img src="{}" width="150" height="150" />'.format(self.url()))
-    photo_tag.short_description = 'Image'    
+        html = '<img src="{}" width="150" height="150" />'
+        return mark_safe(html.format(self.url()))
+    photo_tag.short_description = 'Photo'
+
+    def delete_file(self):
+        filepath = os.path.join(MEDIA_ROOT, 'attachments', self.name)
+        try:
+            os.remove(filepath)
+        except FileNotFoundError:
+            print(f"{filepath} not found")
 
     def __str__(self):
         return f'{self.message}'
+
+
+@receiver(post_delete, sender=Attachment)
+def delelte_attachment_file(sender, instance, using, **kwargs):
+    instance.delete_file()
