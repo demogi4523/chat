@@ -1,1 +1,0 @@
-web: hypercorn chat.wsgi:application --log-file -
