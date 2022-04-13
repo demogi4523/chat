@@ -49,6 +49,12 @@ wsproto = "1.1.0"
 "zope.interface" = "5.4.0"
 
 [tool.poetry.dev-dependencies]
+pylint = "^2.13.5"
+pre-commit = "^2.18.1"
+flake8 = {git = "https://gitlab.com/pycqa/flake8.git"}
+black = "^22.3.0"
+
+[tool.poetry.scripts]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

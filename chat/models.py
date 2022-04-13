@@ -8,14 +8,12 @@ from django.dispatch import receiver
 
 from core.settings import MEDIA_URL, MEDIA_ROOT
 
-default_image = os.path.join('avas', 'default.jpeg')
+default_image = os.path.join("avas", "default.jpeg")
 
 
 class Avatar(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    photo = models.ImageField(blank=False,
-                              default=default_image,
-                              upload_to='avas')
+    photo = models.ImageField(blank=False, default=default_image, upload_to="avas")
 
     def __str__(self):
         return f"{self.user.username} avatar"
@@ -33,7 +31,7 @@ class Room(models.Model):
         self.save()
 
     def __str__(self):
-        return f'{self.name} ({self.get_online_count()})'
+        return f"{self.name} ({self.get_online_count()})"
 
 
 class PersonalChat(models.Model):
@@ -51,32 +49,35 @@ class Message(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'{self.user.username}: {self.content} [{self.timestamp}]'
+        return f"{self.user.username}: {self.content} [{self.timestamp}]"
 
 
 class Attachment(models.Model):
-    message = models.ForeignKey(to=Message, on_delete=models.CASCADE, related_name='attachment')
-    photo = models.ImageField(upload_to='attachments', blank=False)
-    name = models.CharField(max_length=128, unique=True, default='qq')
+    message = models.ForeignKey(
+        to=Message, on_delete=models.CASCADE, related_name="attachment"
+    )
+    photo = models.ImageField(upload_to="attachments", blank=False)
+    name = models.CharField(max_length=128, unique=True, default="qq")
 
     def url(self):
-        return os.path.join(MEDIA_URL, 'attachments', self.name)
+        return os.path.join(MEDIA_URL, "attachments", self.name)
 
     def photo_tag(self):
         # used in the admin site model as a "thumbnail"
         html = '<img src="{}" width="150" height="150" />'
         return mark_safe(html.format(self.url()))
-    photo_tag.short_description = 'Photo'
+
+    photo_tag.short_description = "Photo"
 
     def delete_file(self):
-        filepath = os.path.join(MEDIA_ROOT, 'attachments', self.name)
+        filepath = os.path.join(MEDIA_ROOT, "attachments", self.name)
         try:
             os.remove(filepath)
         except FileNotFoundError:
             print(f"{filepath} not found")
 
     def __str__(self):
-        return f'{self.message}'
+        return f"{self.message}"
 
 
 @receiver(post_delete, sender=Attachment)
