@@ -1,3 +1,4 @@
+import json
 import os
 
 from django.db import models
@@ -12,7 +13,7 @@ default_image = os.path.join("avas", "default.jpeg")
 
 
 class Avatar(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='avatar')
     photo = models.ImageField(blank=False, default=default_image, upload_to="avas")
 
     def __str__(self):
@@ -55,6 +56,16 @@ class Message(models.Model):
     room = models.ForeignKey(to=Room, on_delete=models.CASCADE)
     content = models.CharField(max_length=512)
     timestamp = models.DateTimeField(auto_now_add=True)
+
+    def json(self):
+        return json.dumps({
+            'user': str(self.user),
+            'room': str(self.room),
+            'content': self.content,
+            'avatar': self.user.avatar.photo.url,
+            'attachment': self.attachment.first().url(),
+            # 'timestamp': datetime.datetime.isoformat(self.timestamp),
+        })
 
     def __str__(self):
         return f"{self.user.username}: {self.content} [{self.timestamp}]"

@@ -3,9 +3,9 @@
 {% load static %}
 {% load q_tags %}
 
-{% block title %} 
-  django-channels-chat 
-{% endblock title %} 
+{% block title %}
+  django-channels-chat
+{% endblock title %}
 
 {% block style %}
 <style>
@@ -36,7 +36,7 @@
   {% comment %} TODO: вынести аккаунт в navbar {% endcomment %}
   <figure>
     <img src="http://{{ req.get_host }}/media/{{ path }}" width="150" height="150" />
-    <figcaption>{{ username }}</figcaption>
+    <figcaption id="username">{{ username }}</figcaption>
   </figure>
   <a href="{% url 'chat:logout' %}">Logout</a>
 
@@ -53,10 +53,10 @@
                 <img src="{{ message.user.avatar.photo.url }}" width="40" height="40">
                 <div>{{ message.user.username }}:</div>
               </div>
-              
+
               <div>
                 <img src={{ message | get_attachment_url }} width="160" height="80" />
-                <div>{{ message.content }}</div>    
+                <div>{{ message.content }}</div>
               </div>
               <hr>
             </div>
@@ -85,7 +85,11 @@
         </div>
       </div>
     </div>
-    
+
+    <div>
+      <button id="updateMessageBtn">Load messages</button>
+    </div>
+
     <div class="col-12 col-md-4">
       <label for="onlineUsers">Online users</label>
       <select multiple class="form-control" id="onlineUsersSelector"></select>

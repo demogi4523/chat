@@ -55,8 +55,8 @@ def index_view(req):
 def room_view(req, room_name):
     chat_room, created = Room.objects.get_or_create(name=room_name)
     path = Avatar.objects.get(user=req.user).photo
-    paginator = Paginator(Message.objects.all(), 25)
-    messages = paginator.get_page(0)
+    paginator = Paginator(Message.objects.filter(room=chat_room).all(), 5)
+    messages = paginator.get_page(1)
     return render(
         req,
         "room.html",

@@ -12,10 +12,13 @@ function hide_broken_image() {
 hide_broken_image()
 
 const roomName = JSON.parse(document.getElementById("roomName").textContent);
+const username = document.getElementById("username").textContent;
 
 let photo;
+let currentPage = 2;
 const q = document.querySelector('#q');
 const q2 = document.querySelector('#q2');
+const updateMessageBtn = document.querySelector('#updateMessageBtn');
 let chatLog = document.querySelector("#chatLog");
 let chatMessageInput = document.querySelector("#chatMessageInput");
 let chatMessageSend = document.querySelector("#chatMessageSend");
@@ -78,6 +81,16 @@ chatMessageInput.onkeyup = function (e) {
   }
 };
 
+updateMessageBtn.onclick = function() {
+  const msg = {
+    "updater": {
+      "page": currentPage,
+      "target": username,
+    }
+  }
+  chatSocket.send(JSON.stringify(msg));
+}
+
 // clear the 'chatMessageInput' and forward the message
 chatMessageSend.onclick = function () {
   if (chatMessageInput.value.length === 0) return;
@@ -89,21 +102,22 @@ chatMessageSend.onclick = function () {
         photo: fr.result,
       };
       chatMessageInput.value = "";
-      console.log(msg);
+      // console.log(msg);
       chatSocket.send(JSON.stringify(msg));
       q2.src = '#';
-      q2.style.display = 'none';  
+      q2.style.display = 'none';
     };
     fr.readAsDataURL(photo);
-  } else {
-    chatSocket.send(
-      JSON.stringify({
-        message: chatMessageInput.value,
-      })
-    );
-    chatMessageInput.value = "";
+    return;
   }
 
+  chatSocket.send(
+    JSON.stringify({
+      message: chatMessageInput.value,
+    })
+  );
+  chatMessageInput.value = "";
+  return;
 };
 
 let chatSocket = null;
@@ -133,14 +147,10 @@ function connect() {
 
     switch (data.type) {
       case "chat_message":
-        // chatLog.value += data.user + ": " + data.message + "\n";
         addMessage(data.user.username, data.message, data.user.avatar);
         break;
       case "chat_message_with_attachment":
         addMessage(data.user.username, data.message, data.user.avatar, data.photo);
-        // chatLog.value += data.user + ": " + data.message + "\n" + "WITH ATTACHMENT" + "\n";
-        // q.src = data.photo;
-        // q.style.display = "block";
         break
       case "user_list":
         for (let i = 0; i < data.users.length; i += 1) {
@@ -165,6 +175,25 @@ function connect() {
         break;
       case "private_message_delivered":
         chatLog.value += "PM to " + data.target + ": " + data.message + "\n";
+        break;
+      case "message_loading":
+        const ended = data.messages.ended;
+        if (ended) {
+          break;
+        }
+        const messages = data.messages.page;
+        const len = messages.length;
+        if (len > 0) {
+          for (let i = 0; i < len; i += 1) {
+            const message = JSON.parse(messages[i]);
+            const avatar = message.avatar;
+            const username = message.username;
+            const content = message.content;
+            const attachment = message.attachment;
+            addMessage(username, content, avatar, attachment);
+          }
+          currentPage += 1;
+        }
         break;
       default:
         console.error("Unknown message type!");

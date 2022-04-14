@@ -4,6 +4,7 @@ from uuid import uuid4
 from django.core.files.base import ContentFile
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
+from django.core.paginator import Paginator
 
 from .models import Attachment, Avatar, Room, Message
 from .utils import file_from_string_to_file
@@ -17,6 +18,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.room = None
         self.user = None
         self.user_inbox = None
+        self.user_msg_loading = None
 
     async def websocket_connect(self, event):
         self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
@@ -24,6 +26,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.room = await database_sync_to_async(self.get_room)(self.room_name)
         self.user = self.scope["user"]
         self.user_inbox = f"inbox_{self.user.username}"
+        self.user_msg_loading = f"msg_loading_{self.user.username}"
 
         # connection has to be accepted
         await self.accept()
@@ -38,6 +41,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
             # create a user inbox for private messages
             await self.channel_layer.group_add(
                 self.user_inbox,
+                self.channel_name,
+            )
+
+            # create a user loading messages
+            await self.channel_layer.group_add(
+                self.user_msg_loading,
                 self.channel_name,
             )
 
@@ -94,12 +103,26 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
     async def websocket_receive(self, event):
-        # print(type(event["text"]))
         text_data_json = json.loads(event["text"])
-        message = text_data_json["message"]
+        message = text_data_json.get("message", None)
         photo = text_data_json.get("photo", None)
+        updater = text_data_json.get("updater", None)
 
         if not self.user.is_authenticated:
+            return
+
+        if updater:
+            page = updater["page"]
+            target = updater["target"]
+            messages = await database_sync_to_async(get_messages_load)(self.room, page)
+            await self.channel_layer.group_send(
+                f"msg_loading_{target}",
+                {
+                    "type": "message_loading",
+                    "messages": messages,
+                }
+            )
+
             return
 
         if message.startswith("/pm "):
@@ -203,9 +226,21 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def private_message(self, event):
         await self.send(text_data=json.dumps(event))
 
+    async def message_loading(self, event):
+        await self.send(text_data=json.dumps(event))
+
     async def private_message_delivered(self, event):
         await self.send(text_data=json.dumps(event))
 
 
 def get_photo_url(user):
     return Avatar.objects.get(user=user).photo.url
+
+
+def get_messages_load(room, page_number):
+    paginator = Paginator(Message.objects.filter(room=room).all(), 5)
+    if page_number > paginator.num_pages:
+        return {"ended": True}
+    page = paginator.get_page(page_number)
+    page = [msg.json() for msg in page.object_list]
+    return {'ended': False, 'page': page}
