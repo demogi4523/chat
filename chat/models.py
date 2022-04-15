@@ -24,6 +24,7 @@ class Avatar(models.Model):
 
     def get_photo(self):
         # used in the admin site model as a "thumbnail"
+        # TODO: create thumbnail
         html = '<img src="{}" width="150" height="150" />'
         return mark_safe(html.format(self.url()))
 
@@ -58,12 +59,17 @@ class Message(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def json(self):
+        attachment = self.attachment.first()
+        attachment_url = None
+        if attachment:
+            attachment_url = attachment.url()
         return json.dumps({
             'user': str(self.user),
             'room': str(self.room),
             'content': self.content,
             'avatar': self.user.avatar.photo.url,
-            'attachment': self.attachment.first().url(),
+            'attachment': attachment_url,
+            # TODO: add serialization of timestamp
             # 'timestamp': datetime.datetime.isoformat(self.timestamp),
         })
 
@@ -83,6 +89,7 @@ class Attachment(models.Model):
 
     def photo_tag(self):
         # used in the admin site model as a "thumbnail"
+        # TODO: create thumbnail
         html = '<img src="{}" width="150" height="150" />'
         return mark_safe(html.format(self.url()))
 

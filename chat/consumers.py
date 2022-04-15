@@ -125,17 +125,23 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
             return
 
+        # TODO: add saving private messages to db
+        # TODO: add attachment support
         if message.startswith("/pm "):
             split = message.split(" ", 2)
             target = split[1]
             target_msg = split[2]
 
             # send private message to the target
+            avatar_url = await database_sync_to_async(get_photo_url)(self.user)
             await self.channel_layer.group_send(
                 f"inbox_{target}",
                 {
                     "type": "private_message",
-                    "user": self.user.username,
+                    "user": {
+                        "username": self.user.username,
+                        "photo": avatar_url,
+                    },
                     "message": target_msg,
                 },
             )

@@ -1,4 +1,5 @@
 {% load static %}
+{% comment %} {% load i18n %}  {% endcomment %}
 <!DOCTYPE html>
 <html>
   <head>
@@ -12,12 +13,7 @@
     {% block style %}{% endblock style %}
   </head>
   <body>
-    <div id="header">
-      {% comment %} TODO: Сделать navbar {% endcomment %}
-      <span class="logo">Logo</span>
-      {% comment %} TODO: вынести настройки аккаунта в аккаунт {% endcomment %}
-      <a href="{% url 'account-settings' %}"><span class="alert alert-info">Settings</span></a>
-    </div>
+    {% include "navbar.html" %}
     <div id="content">{% block content %} {% endblock %}</div>
   </body>
 </html>

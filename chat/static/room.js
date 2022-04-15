@@ -13,6 +13,7 @@ hide_broken_image()
 
 const roomName = JSON.parse(document.getElementById("roomName").textContent);
 const username = document.getElementById("username").textContent;
+const avatar_url = document.querySelector('#avatar').src;
 
 let photo;
 let currentPage = 2;
@@ -26,20 +27,26 @@ let onlineUsersSelector = document.querySelector("#onlineUsersSelector");
 
 function addMessage(author, msg, photo, attachment) {
   const newMessage = document.createElement('div');
+  newMessage.classList.add('message');
   const user = document.createElement('div');
+  user.classList.add('message_user');
   const avatar = document.createElement('img');
   avatar.src = photo;
   avatar.style.width = '40px';
   avatar.style.height = '40px';
+  avatar.classList.add('avatar');
   const username = document.createElement('div');
   username.textContent = author;
   const message = document.createElement('div');
-  message.textContent = msg;
+  message.classList.add('message_text');
+  const message_text = document.createElement('div');
+  message_text.textContent = msg;
+  message.classList.add('message_text__conteiner');
+  message.appendChild(message_text);
 
   user.appendChild(avatar);
   user.appendChild(username);
 
-  const hr = document.createElement('hr');
   newMessage.appendChild(user);
 
   if (attachment) {
@@ -51,22 +58,35 @@ function addMessage(author, msg, photo, attachment) {
   }
 
   newMessage.appendChild(message);
-  newMessage.appendChild(hr);
   chatLog.appendChild(newMessage);
 }
 
 // adds a new option to 'onlineUsersSelector'
-function onlineUsersSelectorAdd(value) {
-  if (document.querySelector("option[value='" + value + "']")) return;
-  let newOption = document.createElement("option");
-  newOption.value = value;
-  newOption.innerHTML = value;
+function onlineUsersSelectorAdd(username, avatar_url) {
+  const qw = document.querySelector("#" + username + "_online");
+  if (qw) return;
+  const newOption = document.createElement("div");
+  newOption.id = username + "_online";
+  const uname = document.createElement("div");
+  uname.style.alignSelf = 'center';
+  uname.textContent = username;
+  const avatar = document.createElement("div");
+  const img = document.createElement("img");
+  img.src = avatar_url;
+  img.alt = username + ' avatar';
+  img.style.width = '40px';
+  img.style.height = '40px';
+  img.classList.add('avatar');
+  avatar.appendChild(img);
+  newOption.appendChild(avatar);
+  newOption.appendChild(uname);
+  newOption.classList.add("user_online_info");
   onlineUsersSelector.appendChild(newOption);
 }
 
 // removes an option from 'onlineUsersSelector'
-function onlineUsersSelectorRemove(value) {
-  let oldOption = document.querySelector("option[value='" + value + "']");
+function onlineUsersSelectorRemove(username) {
+  const oldOption = document.querySelector("#" + username + "_online");
   if (oldOption !== null) oldOption.remove();
 }
 
@@ -147,57 +167,74 @@ function connect() {
 
     switch (data.type) {
       case "chat_message":
-        addMessage(data.user.username, data.message, data.user.avatar);
-        break;
-      case "chat_message_with_attachment":
-        addMessage(data.user.username, data.message, data.user.avatar, data.photo);
-        break
-      case "user_list":
-        for (let i = 0; i < data.users.length; i += 1) {
-          onlineUsersSelectorAdd(
-            data.users[i].username + ":   " + data.users[i].photo
-          );
-        }
-        break;
-      case "user_join":
-        // TODO: Update this code
-        // chatLog.value += data.user.username + " joined the room.\n";
-        onlineUsersSelectorAdd(data.user.username + ":   " + data.user.photo);
-        break;
-      case "user_leave":
-        chatLog.value += data.user.username + " leave the room.\n";
-        onlineUsersSelectorRemove(
-          data.user.username + ":   " + data.user.photo
-        );
-        break;
-      case "private_message":
-        chatLog.value += "PM from " + data.user + ": " + data.message + "\n";
-        break;
-      case "private_message_delivered":
-        chatLog.value += "PM to " + data.target + ": " + data.message + "\n";
-        break;
-      case "message_loading":
-        const ended = data.messages.ended;
-        if (ended) {
+        {
+          addMessage(data.user.username, data.message, data.user.avatar);
           break;
         }
-        const messages = data.messages.page;
-        const len = messages.length;
-        if (len > 0) {
-          for (let i = 0; i < len; i += 1) {
-            const message = JSON.parse(messages[i]);
-            const avatar = message.avatar;
-            const username = message.username;
-            const content = message.content;
-            const attachment = message.attachment;
-            addMessage(username, content, avatar, attachment);
-          }
-          currentPage += 1;
+      case "chat_message_with_attachment":
+        {
+          addMessage(data.user.username, data.message, data.user.avatar, data.photo);
+          break
         }
-        break;
+      case "user_list":
+        {
+          for (let i = 0; i < data.users.length; i += 1) {
+            onlineUsersSelectorAdd(data.users[i].username, data.users[i].photo);
+          }
+          break;
+        }
+      case "user_join":
+        {
+          onlineUsersSelectorAdd(data.user.username, data.user.photo);
+          break;
+        }
+      case "user_leave":
+        {
+          console.log(data.user.username + " leave the room.");
+          onlineUsersSelectorRemove(data.user.username);
+          break;
+        }
+        // TODO: fix handling private message and add attachment support to PM
+      case "private_message":
+        {
+          const username = data.user.username;
+          const avatar_url = data.user.photo;
+          addMessage(username, "PM from " + username + ": " + data.message, avatar_url);
+          break;
+        }
+      case "private_message_delivered":
+        {
+          console.log(avatar_url);
+          addMessage(username, "PM to " + data.target + ": " + data.message, avatar_url);
+          // chatLog.value += "PM to " + data.target + ": " + data.message + "\n";
+          break;
+        }
+      case "message_loading":
+        {
+          const ended = data.messages.ended;
+          if (ended) {
+            break;
+          }
+          const messages = data.messages.page;
+          const len = messages.length;
+          if (len > 0) {
+            for (let i = 0; i < len; i += 1) {
+              const message = JSON.parse(messages[i]);
+              const avatar = message.avatar;
+              const username = message.username;
+              const content = message.content;
+              const attachment = message.attachment;
+              addMessage(username, content, avatar, attachment);
+            }
+            currentPage += 1;
+          }
+          break;
+        }
       default:
-        console.error("Unknown message type!");
-        break;
+        {
+          console.error("Unknown message type!");
+          break;
+        }
     }
 
     // scroll 'chatLog' to the bottom
@@ -212,12 +249,6 @@ function connect() {
 }
 connect();
 
-onlineUsersSelector.onchange = function () {
-  chatMessageInput.value =
-    "/pm " + onlineUsersSelector.value.split(":")[0] + " ";
-  onlineUsersSelector.value = null;
-  chatMessageInput.focus();
-};
 
 window.addEventListener("unload", function () {
     if(chatSocket.readyState == WebSocket.OPEN)
@@ -240,3 +271,20 @@ window.onload = function() {
       upload_img(e.target)
   });
 }
+
+const sending_form = document.querySelector('#sending_form');
+sending_form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  chatMessageSend.click();
+});
+
+onlineUsersSelector.ondblclick = function (e) {
+  const target = e.target;
+  e.stopPropagation();
+  const user_info_online = target.closest('.user_online_info');
+  const username = user_info_online.id.replace('#', '').replace('_online', '');
+  chatMessageInput.value =
+    "/pm " + username + " "
+    + chatMessageInput.value;
+  chatMessageInput.focus();
+};

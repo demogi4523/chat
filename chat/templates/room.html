@@ -8,91 +8,75 @@
 {% endblock title %}
 
 {% block style %}
-<style>
-  #onlineUsersSelector {
-    height: 300px;
-  }
+<link rel="stylesheet" href="{% static 'css/room.css' %}"">
+{% endblock style %}
 
-  .message {
-    display: flex;
-    flex-direction: column;
-    width: 600px;
-  }
-
-  .message_user {
-    flex: 1;
-    width: 50px;
-    height: 50px;
-  }
-
-  .message_text {
-    flex: 3;
-  }
-</style>
-{% endblock style %} {% block content %}
+{% block content %}
 <div class="container mt-3 p-5">
   <h2>django-channels-chat</h2>
 
-  {% comment %} TODO: вынести аккаунт в navbar {% endcomment %}
+  <!-- TODO: Убрать в navbar и поменять логику нахождения avatar_url -->
   <figure>
-    <img src="http://{{ req.get_host }}/media/{{ path }}" width="150" height="150" />
+    <img src="http://{{ req.get_host }}/media/{{ path }}" width="150" height="150" id="avatar"/>
     <figcaption id="username">{{ username }}</figcaption>
   </figure>
-  <a href="{% url 'chat:logout' %}">Logout</a>
 
   <div class="row">
     <div class="col-12 col-md-8">
       <div class="mb-2">
-        <label for="chatLog">Room: #{{ room.name }}</label>
-        {% comment %} TODO: Заменить textarea на div {% endcomment %}
+        Room: #{{ room.name }}
         <div id="chatLog">
           {% comment %} <img src="#" alt="" id="q" width="150" height="150"> {% endcomment %}
           {% for message in messages %}
-            <div>
-              <div>
-                <img src="{{ message.user.avatar.photo.url }}" width="40" height="40">
+            <div class="message">
+              <div class="message_user">
+                <img src="{{ message.user.avatar.photo.url }}" width="40" height="40" class="avatar">
                 <div>{{ message.user.username }}:</div>
               </div>
 
-              <div>
+              <div class="message_text">
                 <img src={{ message | get_attachment_url }} width="160" height="80" />
-                <div>{{ message.content }}</div>
+                <div class="message_text__conteiner">{{ message.content }}</div>
               </div>
-              <hr>
             </div>
           {% endfor %}
         </div>
       </div>
 
+      <form  id="sending_form">
+        <div class="input-group">
+          <div>
+            <img src="#" alt="" id="q2" width="150" height="150">
+          </div>
+          <input
+            type="text"
+            class="form-control"
+            id="chatMessageInput"
+            placeholder="Enter your chat message"
+          />
+          <div class="input-group-append">
+            <input type="file">
+          </div>
 
-      <div class="input-group">
-        <div>
-          <img src="#" alt="" id="q2" width="150" height="150">
-        <div>
-        <input
-          type="text"
-          class="form-control"
-          id="chatMessageInput"
-          placeholder="Enter your chat message"
-        />
-        <div class="input-group-append">
-          <input type="file">
+          <div>
+            <button id="updateMessageBtn">Load messages</button>
+          </div>
+
+          <div class="input-group-append">
+            <button class="btn btn-success" id="chatMessageSend" type="button">
+              Send
+            </button>
+          </div>
         </div>
-        <div class="input-group-append">
-          <button class="btn btn-success" id="chatMessageSend" type="button">
-            Send
-          </button>
-        </div>
-      </div>
+      </form>
     </div>
 
-    <div>
-      <button id="updateMessageBtn">Load messages</button>
-    </div>
 
-    <div class="col-12 col-md-4">
-      <label for="onlineUsers">Online users</label>
-      <select multiple class="form-control" id="onlineUsersSelector"></select>
+    <div class="col-12 col-md-4" id="usersOnline">
+      <!-- <label for="onlineUsers">Online users</label> -->
+      Online users
+      <!-- <select multiple class="form-control" id="onlineUsersSelector"></select> -->
+      <div class="form-control" id="onlineUsersSelector"></div>
     </div>
   </div>
   {{ room.name|json_script:"roomName" }}

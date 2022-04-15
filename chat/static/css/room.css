@@ -1,0 +1,65 @@
+/* #usersOnline {
+  position: fixed;
+  right: -100px;
+  top: 100px;
+  width: 60px;
+  height: 120px;
+} */
+
+#onlineUsersSelector {
+  height: 300px;
+}
+
+.avatar {
+  border-radius: 50%;
+}
+
+.user_online_info {
+  display: flex;
+  gap: 20px;
+}
+
+.user_online_info + .user_online_info {
+  margin-top: 10px;
+}
+
+.message {
+  display: flex;
+  max-width: 1200px;
+  min-width: 300px;
+  gap: 20px;
+}
+
+.message + .message {
+  margin-top: 30px;
+}
+
+.message_user {
+  border: 3px solid salmon;
+  border-radius: 5px;
+}
+
+.message_text {
+  width: 100%;
+  border: 2px solid steelblue;
+  border-radius: 20px;
+  background-color: cadetblue;
+}
+
+.message_text__conteiner {
+  color: white;
+  padding: 20px;
+}
+
+#sending_form {
+  position: fixed;
+  bottom: 30px;
+  border: 2px solid seagreen;
+  border-radius: 10px;
+  padding: 20px;
+}
+
+#chatLog {
+  height: 400px;
+  overflow-y: scroll;
+}
