@@ -8,25 +8,17 @@
 {% endblock title %}
 
 {% block style %}
-<link rel="stylesheet" href="{% static 'css/room.css' %}"">
+<link rel="stylesheet" href="{% static 'css/room.css' %}">
 {% endblock style %}
 
 {% block content %}
 <div class="container mt-3 p-5">
-  <h2>django-channels-chat</h2>
-
-  <!-- TODO: Убрать в navbar и поменять логику нахождения avatar_url -->
-  <figure>
-    <img src="http://{{ req.get_host }}/media/{{ path }}" width="150" height="150" id="avatar"/>
-    <figcaption id="username">{{ username }}</figcaption>
-  </figure>
+  <h2 class="text-center">{{ room.name }}</h2>
 
   <div class="row">
     <div class="col-12 col-md-8">
       <div class="mb-2">
-        Room: #{{ room.name }}
         <div id="chatLog">
-          {% comment %} <img src="#" alt="" id="q" width="150" height="150"> {% endcomment %}
           {% for message in messages %}
             <div class="message">
               <div class="message_user">
@@ -37,6 +29,7 @@
               <div class="message_text">
                 <img src={{ message | get_attachment_url }} width="160" height="80" />
                 <div class="message_text__conteiner">{{ message.content }}</div>
+                <div class="message_text__timestamp">{{ message.timestamp | date:"r"}}</div>
               </div>
             </div>
           {% endfor %}
@@ -55,11 +48,10 @@
             placeholder="Enter your chat message"
           />
           <div class="input-group-append">
-            <input type="file">
-          </div>
-
-          <div>
-            <button id="updateMessageBtn">Load messages</button>
+            <label class="btn btn-secondary">
+            <input type="file" style="display:none" accepts="*">
+            <i class="fa-solid fa-paperclip"></i>
+            </label>
           </div>
 
           <div class="input-group-append">
@@ -73,9 +65,7 @@
 
 
     <div class="col-12 col-md-4" id="usersOnline">
-      <!-- <label for="onlineUsers">Online users</label> -->
       Online users
-      <!-- <select multiple class="form-control" id="onlineUsersSelector"></select> -->
       <div class="form-control" id="onlineUsersSelector"></div>
     </div>
   </div>

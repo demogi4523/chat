@@ -1,4 +1,4 @@
-console.log("Sanity check from room.js.");
+// console.log("Sanity check from room.js.");
 
 function hide_broken_image() {
   const imgs = document.querySelectorAll('img');
@@ -12,20 +12,27 @@ function hide_broken_image() {
 hide_broken_image()
 
 const roomName = JSON.parse(document.getElementById("roomName").textContent);
-const username = document.getElementById("username").textContent;
 const avatar_url = document.querySelector('#avatar').src;
+const username = document.querySelector('#avatar').alt.replace(' avatar', '');
 
+let ended = false;
 let photo;
 let currentPage = 2;
-const q = document.querySelector('#q');
+const file = document.querySelector('input[type=file]');
 const q2 = document.querySelector('#q2');
-const updateMessageBtn = document.querySelector('#updateMessageBtn');
 let chatLog = document.querySelector("#chatLog");
 let chatMessageInput = document.querySelector("#chatMessageInput");
 let chatMessageSend = document.querySelector("#chatMessageSend");
 let onlineUsersSelector = document.querySelector("#onlineUsersSelector");
 
-function addMessage(author, msg, photo, attachment) {
+file.addEventListener('change', () => {
+  const fileListArr = Array.from(file.files);
+  fileListArr.splice(0, 1); // here u remove the file
+  // console.log(fileListArr);
+})
+
+
+function createMessage(author, msg, photo, timestamp, attachment) {
   const newMessage = document.createElement('div');
   newMessage.classList.add('message');
   const user = document.createElement('div');
@@ -41,8 +48,12 @@ function addMessage(author, msg, photo, attachment) {
   message.classList.add('message_text');
   const message_text = document.createElement('div');
   message_text.textContent = msg;
-  message.classList.add('message_text__conteiner');
+  message_text.classList.add('message_text__conteiner');
   message.appendChild(message_text);
+  const message_timestamp = document.createElement('div');
+  message_timestamp.textContent = timestamp;
+  message_timestamp.classList.add("message_text__timestamp");
+  message.appendChild(message_timestamp);
 
   user.appendChild(avatar);
   user.appendChild(username);
@@ -58,7 +69,17 @@ function addMessage(author, msg, photo, attachment) {
   }
 
   newMessage.appendChild(message);
-  chatLog.appendChild(newMessage);
+  return newMessage;
+}
+
+function addMessage(author, msg, photo, timestamp, attachment) {
+  const message = createMessage(author, msg, photo, timestamp, attachment);
+  chatLog.appendChild(message);
+}
+
+function loadMessage(author, msg, photo, timestamp, attachment) {
+  const message = createMessage(author, msg, photo, timestamp, attachment);
+  chatLog.prepend(message);
 }
 
 // adds a new option to 'onlineUsersSelector'
@@ -101,11 +122,12 @@ chatMessageInput.onkeyup = function (e) {
   }
 };
 
-updateMessageBtn.onclick = function() {
+function loading_messages(e) {
+  e.preventDefault();
+  e.stopPropagation();
   const msg = {
     "updater": {
       "page": currentPage,
-      "target": username,
     }
   }
   chatSocket.send(JSON.stringify(msg));
@@ -113,7 +135,7 @@ updateMessageBtn.onclick = function() {
 
 // clear the 'chatMessageInput' and forward the message
 chatMessageSend.onclick = function () {
-  if (chatMessageInput.value.length === 0) return;
+  if (chatMessageInput.value.length === 0 && !photo) return;
   if (photo) {
     const fr = new FileReader();
     fr.onloadend = () => {
@@ -122,7 +144,6 @@ chatMessageSend.onclick = function () {
         photo: fr.result,
       };
       chatMessageInput.value = "";
-      // console.log(msg);
       chatSocket.send(JSON.stringify(msg));
       q2.src = '#';
       q2.style.display = 'none';
@@ -163,19 +184,9 @@ function connect() {
 
   chatSocket.onmessage = function (e) {
     const data = JSON.parse(e.data);
-    console.log(data);
+    // console.log(data);
 
     switch (data.type) {
-      case "chat_message":
-        {
-          addMessage(data.user.username, data.message, data.user.avatar);
-          break;
-        }
-      case "chat_message_with_attachment":
-        {
-          addMessage(data.user.username, data.message, data.user.avatar, data.photo);
-          break
-        }
       case "user_list":
         {
           for (let i = 0; i < data.users.length; i += 1) {
@@ -194,40 +205,72 @@ function connect() {
           onlineUsersSelectorRemove(data.user.username);
           break;
         }
-        // TODO: fix handling private message and add attachment support to PM
-      case "private_message":
+      case "message_loading":
+        {
+          const ended_messages = data.messages.ended;
+          if (ended_messages) {
+            ended = true;
+            break;
+          }
+          const messages = data.messages.page;
+          for (let i = 0; i < messages.length; i += 1) {
+            const message = JSON.parse(messages[i]);
+            const username = message.username;
+            const content = message.content;
+            const attachment = message.attachment;
+            const avatar_url = message.avatar_url;
+            const timestamp = message.timestamp;
+            loadMessage(username, content, avatar_url, timestamp, attachment);
+          }
+          currentPage += 1;
+          break;
+        }
+      case "chat_public_message":
         {
           const username = data.user.username;
-          const avatar_url = data.user.photo;
-          addMessage(username, "PM from " + username + ": " + data.message, avatar_url);
+          const avatar_url = data.user.avatar_url;
+          const content = data.message.content;
+          const timestamp = data.message.timestamp;
+          addMessage(username, content, avatar_url, timestamp);
+          break;
+        }
+      case "chat_public_with_attachment_message":
+        {
+          const username = data.user.username;
+          const avatar_url = data.user.avatar_url;
+          const content = data.message.content;
+          const timestamp = data.message.timestamp;
+          const attachment = data.message.attachment;
+
+          addMessage(username, content, avatar_url, timestamp, attachment);
+          break
+        }
+      case "chat_private_message":
+        {
+          const username = data.user.username;
+          const avatar_url = data.user.avatar_url;
+          const content = data.message.content;
+          const timestamp = data.message.timestamp;
+          addMessage(username, "PM from " + username + ": " + content, avatar_url, timestamp, attachment);
+          break;
+        }
+      case "chat_private_with_attachment_message":
+        {
+          const username = data.user.username;
+          const avatar_url = data.user.avatar_url;
+          const content = data.message.content;
+          const timestamp = data.message.timestamp;
+          const attachment = data.message.attachment
+          addMessage(username, "PM from " + username + ": " + content, avatar_url, timestamp, attachment);
           break;
         }
       case "private_message_delivered":
         {
-          console.log(avatar_url);
-          addMessage(username, "PM to " + data.target + ": " + data.message, avatar_url);
-          // chatLog.value += "PM to " + data.target + ": " + data.message + "\n";
-          break;
-        }
-      case "message_loading":
-        {
-          const ended = data.messages.ended;
-          if (ended) {
-            break;
-          }
-          const messages = data.messages.page;
-          const len = messages.length;
-          if (len > 0) {
-            for (let i = 0; i < len; i += 1) {
-              const message = JSON.parse(messages[i]);
-              const avatar = message.avatar;
-              const username = message.username;
-              const content = message.content;
-              const attachment = message.attachment;
-              addMessage(username, content, avatar, attachment);
-            }
-            currentPage += 1;
-          }
+          const message = data.message;
+          const content = message.content;
+          const attachment = message.attachment;
+          const timestamp = message.timestamp;
+          addMessage(username + ':', "PM to " + data.target + ": " + content, avatar_url, timestamp, attachment);
           break;
         }
       default:
@@ -265,7 +308,6 @@ function upload_img(input) {
 }
 
 window.onload = function() {
-  const file = document.querySelector('input[type=file]');
   file.addEventListener('change', (e) => {
       e.stopPropagation();
       upload_img(e.target)
@@ -276,6 +318,7 @@ const sending_form = document.querySelector('#sending_form');
 sending_form.addEventListener('submit', (e) => {
   e.preventDefault();
   chatMessageSend.click();
+  file.value = '';
 });
 
 onlineUsersSelector.ondblclick = function (e) {
@@ -288,3 +331,11 @@ onlineUsersSelector.ondblclick = function (e) {
     + chatMessageInput.value;
   chatMessageInput.focus();
 };
+
+chatLog.addEventListener('scroll', (e) => {
+  const myDiv = e.target;
+  // console.log(myDiv.offsetHeight, myDiv.scrollTop, myDiv.scrollHeight);
+  if ((myDiv.scrollTop == 0) && (ended == false)) {
+    loading_messages(e);
+  }
+})

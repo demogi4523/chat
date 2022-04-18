@@ -1,15 +1,9 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
   <div class="container-fluid">
     <a class="navbar-brand p-2" href="/">Navbar</a>
-    {% comment %} <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-      <li class="nav-item dropdown"> {% endcomment %}
         <div class="btn-group p-3">
-          {% comment %} <button type="button" class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"> {% endcomment %}
           <a type="button" class="dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-            {% comment %} Action {% endcomment %}
-            <img src="/media/avas/ava.jpeg" class="img-fluid dropdown-toggle rounded-circle" width="30" height="30" alt="...">
-          </a>
-          {% comment %} </button> {% endcomment %}
+            <img src="{{ avatar_url }}" class="img-fluid dropdown-toggle rounded-circle" width="30" height="30" alt="{{ avatar_username }} avatar" id="avatar"></a>
           <ul class="dropdown-menu dropdown-menu-end">
             <li><a class="dropdown-item disabled" href="#">Action</a></li>
             <li><a class="dropdown-item disabled" href="#">Another action</a></li>
@@ -17,17 +11,8 @@
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="{% url 'account-settings' %}">Settings</a></li>
             <li><a class="dropdown-item" href="{% url 'chat:logout' %}">Logout</a></li>
-            {% comment %} <li><a class="dropdown-item disabled" href="#">Separated link</a></li> {% endcomment %}
           </ul>
         </div>
-          {% comment %} <li><a class="dropdown-item" href="#">Another action</a></li>
-          <li><a class="dropdown-item" href="#">Something else here</a></li> {% endcomment %}
-        {% comment %} </ul>
-      </li> {% endcomment %}
     </ul>
-      {% comment %} <form class="d-flex">
-        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-        <button class="btn btn-outline-success" type="submit">Search</button>
-      </form> {% endcomment %}
   </div>
 </nav>

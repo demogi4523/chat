@@ -5,8 +5,9 @@ from .models import Room, Message, Avatar, Attachment
 admin.site.register(Room)
 
 
+# TODO: fix this page
 class AvatarModel(admin.ModelAdmin):
-    readonly_fields = ['user', 'avatar']
+    readonly_fields = ['avatar']
 
     def avatar(self, obj):
         return obj.get_photo()

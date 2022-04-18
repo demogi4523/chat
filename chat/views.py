@@ -54,18 +54,18 @@ def index_view(req):
 @login_required(login_url="login-required")
 def room_view(req, room_name):
     chat_room, created = Room.objects.get_or_create(name=room_name)
-    path = Avatar.objects.get(user=req.user).photo
-    paginator = Paginator(Message.objects.filter(room=chat_room).all(), 5)
+    # path = Avatar.objects.get(user=req.user).photo
+    paginator = Paginator(Message.objects.filter(room=chat_room).all().order_by('-timestamp'), 5)
     messages = paginator.get_page(1)
     return render(
         req,
         "room.html",
         {
             "room": chat_room,
-            "path": path,
-            "req": req,
-            "username": req.user.username,
-            "messages": messages,
+            # "path": path,
+            # "req": req,
+            # "username": req.user.username,
+            "messages": reversed(messages),
         },
     )
 
