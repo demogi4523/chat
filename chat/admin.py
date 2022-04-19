@@ -17,7 +17,11 @@ admin.site.register(Avatar, AvatarModel)
 
 
 class MessageModel(admin.ModelAdmin):
+    list_display = ('content', 'room', 'user',)
+    list_filter = ('room',)
     readonly_fields = [
+        'msg_type',
+        'to',
         'content',
         'user',
         'room',
