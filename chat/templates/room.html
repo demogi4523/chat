@@ -28,7 +28,15 @@
 
               <div class="message_text">
                 <img src={{ message | get_attachment_url }} width="160" height="80" />
-                <div class="message_text__conteiner">{{ message.content }}</div>
+                {% if message.msg_type == 'PUBLIC' %}
+                  <div class="message_text__conteiner">{{ message.content }}</div>
+                {% else %}
+                  {% if avatar_username == message.user.username %}
+                    <div class="message_text__conteiner">PM to {{ message.to }}: {{ message.content }}</div>
+                  {% else %}
+                    <div class="message_text__conteiner">PM from {{ message.user.username }}: {{ message.content }}</div>
+                  {% endif %}
+                {% endif %}
                 <div class="message_text__timestamp">{{ message.timestamp | date:"r"}}</div>
               </div>
             </div>

@@ -4,9 +4,10 @@ from datetime import datetime
 
 from django.db import models
 from django.contrib.auth.models import User
-from django.utils.safestring import mark_safe
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
+from django.utils.safestring import mark_safe
+from django.utils.translation import gettext_lazy as _
 
 from core.settings import MEDIA_URL, MEDIA_ROOT, DEFAULT_AVATAR_ROOT
 
@@ -53,10 +54,31 @@ class CommunityChat(models.Model):
     pass
 
 
+class MessageType(models.TextChoices):
+    PUBLIC = 'PUBLIC', _('Public')
+    PRIVATE = 'PRIVATE', _('Private')
+
+
 class Message(models.Model):
-    user = models.ForeignKey(to=User, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        to=User,
+        on_delete=models.CASCADE,
+        related_name='message'
+    )
     room = models.ForeignKey(to=Room, on_delete=models.CASCADE)
     content = models.CharField(max_length=512)
+    msg_type = models.CharField(
+        max_length=7,
+        choices=MessageType.choices,
+        default=MessageType.PUBLIC
+    )
+    to = models.ForeignKey(
+        to=User,
+        on_delete=models.PROTECT,
+        null=True,
+        default=None,
+        related_name='private_message'
+    )
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def json(self):

@@ -251,7 +251,7 @@ function connect() {
           const avatar_url = data.user.avatar_url;
           const content = data.message.content;
           const timestamp = data.message.timestamp;
-          addMessage(username, "PM from " + username + ": " + content, avatar_url, timestamp, attachment);
+          addMessage(username, "PM from " + username + ": " + content, avatar_url, timestamp);
           break;
         }
       case "chat_private_with_attachment_message":

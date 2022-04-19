@@ -5,10 +5,11 @@ from uuid import uuid4
 from enum import Enum, auto
 
 from django.core.files.base import ContentFile
+from django.contrib.auth.models import User
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 
-from ..models import Avatar, Room, Message, Attachment
+from ..models import Avatar, MessageType, Room, Message, Attachment
 from ..utils import file_from_string_to_file
 
 
@@ -107,13 +108,14 @@ class AbstractChatConsumer(AsyncWebsocketConsumer):
         pass
 
     async def send_and_save_msg(self, content, attachment=None, private=False, target=None):
-        msg = await database_sync_to_async(self.create_message)(content)
+        msg = await database_sync_to_async(self.create_message)(content, private, target)
         content = str(msg.content)
         timestamp = await database_sync_to_async(msg.get_timestamp)()
         message = {
             "content": content,
             "timestamp": timestamp,
         }
+        private_or_public = self.room_group_name if private is False else f"inbox_{target}"
         msg_type = ChatMessageTypes.PRIVATE if private else ChatMessageTypes.PUBLIC
         if attachment is not None:
             filename = f"{str(uuid4())}"
@@ -127,20 +129,22 @@ class AbstractChatConsumer(AsyncWebsocketConsumer):
             message["attachment"] = await database_sync_to_async(att.url)()
             msg_type = ChatMessageTypes.add_attachment(msg_type)
 
+        if private:
+            message["to"] = target
+
         event_type = f"chat_{str(msg_type).split('.')[1].lower()}_message"
-        await self.send(
-            json.dumps(
-                {
-                    "type": event_type,
-                    "user": {
-                        "username": self.user.username,
-                        "avatar_url": await database_sync_to_async(get_photo_url)(
-                            self.user
-                        ),
-                    },
-                    "message": message,
-                }
-            )
+        await self.channel_layer.group_send(
+            private_or_public,
+            {
+                "type": event_type,
+                "user": {
+                    "username": self.user.username,
+                    "avatar_url": await database_sync_to_async(get_photo_url)(
+                        self.user
+                    ),
+                },
+                "message": message,
+            }
         )
 
         if private:
@@ -163,11 +167,16 @@ class AbstractChatConsumer(AsyncWebsocketConsumer):
     def get_online(self, room_name):
         return list(Room.objects.get(name=room_name).online.all())
 
-    def create_message(self, msg):
+    def create_message(self, msg, private=False, target=None):
+        to = None
+        if target is not None:
+            to = User.objects.get(username=target)
         message = Message.objects.create(
             user=self.user,
             room=self.room,
             content=msg,
+            msg_type=MessageType.PUBLIC if private is False else MessageType.PRIVATE,
+            to=to,
             timestamp=datetime.now()
         )
         return message

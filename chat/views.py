@@ -4,6 +4,7 @@ from django.contrib.auth import login, authenticate, logout as lgt
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator
+from django.db.models import Q
 
 from .models import Avatar, Message, Room
 from .forms import LoginForm, RegisterForm, AccountPhotoUpdateForm
@@ -54,17 +55,16 @@ def index_view(req):
 @login_required(login_url="login-required")
 def room_view(req, room_name):
     chat_room, created = Room.objects.get_or_create(name=room_name)
-    # path = Avatar.objects.get(user=req.user).photo
-    paginator = Paginator(Message.objects.filter(room=chat_room).all().order_by('-timestamp'), 5)
+    paginator = Paginator(Message.objects.filter(
+        Q(room=chat_room),
+        Q(msg_type='PUBLIC') | Q(to=req.user) | Q(user=req.user)
+    ).all().order_by('-timestamp'), 5)
     messages = paginator.get_page(1)
     return render(
         req,
         "room.html",
         {
             "room": chat_room,
-            # "path": path,
-            # "req": req,
-            # "username": req.user.username,
             "messages": reversed(messages),
         },
     )
